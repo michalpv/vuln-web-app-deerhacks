@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  nginx:
+    restart: always
+    depends_on:
+      - backend
+      - frontend
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:8000"
+
+  backend:
+    restart: always
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=appdb
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_PORT=27017
+      - PORT=3000
+  
+  frontend:
+    restart: always
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - REACT_APP_ENV=production
+
+  db:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=appdb
+    volumes:
+      - ./mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - "27017:27017"
